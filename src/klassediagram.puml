@@ -1,0 +1,122 @@
+@startuml
+!pragma layout smetana
+
+package "model" {
+  class Bruger {
+    - brugernavn : String
+    - password : String
+    - seteMedier : List<Medie>
+    - gemteMedier : List<Medie>
+    + Bruger(brugernavn:String, password:String)
+    + tilføjSetMedie(m:Medie) : void
+    + tilføjGemMedie(m:Medie) : void
+    + fjernGemMedie(m:Medie) : void
+    + getSeteMedier() : List<Medie>
+    + getGemteMedier() : List<Medie>
+    + getBrugernavn() : String
+    + tjekPassword(pw:String) : boolean
+  }
+  abstract class Medie {
+    # titel : String
+    # udgivelsesår : int
+    # rating : double
+    # kategori : Kategori
+    + Medie(titel:String, år:int, rating:double, kategori:Kategori)
+    + getTitel() : String
+    + getUdgivelsesår() : int
+    + getRating() : double
+    + getKategori() : Kategori
+    {abstract} + afspil() : void
+  }
+
+  class Film {
+    - varighed : int
+    + Film(titel:String, år:int, rating:double, kategori:Kategori, varighed:int)
+    + getVarighed() : int
+    + afspil() : void
+  }
+
+  class Serie {
+    - sæsoner : List<Sæson>
+    + Serie(titel:String, år:int, rating:double, kategori:Kategori)
+    + tilføjSæson(s:Sæson) : void
+    + getSæsoner() : List<Sæson>
+    + afspil() : void
+  }
+
+  class Sæson {
+    - nummer : int
+    - episoder : List<Episode>
+    + Sæson(nummer:int)
+    + tilføjEpisode(e:Episode) : void
+    + getEpisoder() : List<Episode>
+    + getNummer() : int
+  }
+
+  class Episode {
+    - titel : String
+    - nummer : int
+    - varighed : int
+    + Episode(titel:String, nummer:int, varighed:int)
+    + getVarighed() : int
+  }
+
+  class Kategori {
+    Crime
+    War
+    Drama
+    Family
+    Romance
+    "Sci-Fi"
+  }
+
+  Medie <|-- Film
+  Medie <|-- Serie
+  Bruger "1" --> "0..*" Medie : seteMedier
+  Bruger "1" --> "0..*" Medie : gemteMedier
+  Serie *-- "1..*" Sæson : sæsoner
+  Sæson *-- "1..*" Episode : episoder
+  Medie --> Kategori : kategori
+}
+
+package "service" {
+  class BrugerManager {
+    - brugere : List<model.Bruger>
+    - filNavn : String = "brugere.txt"
+    + BrugerManager()
+    + indlæsBrugere() : void
+    + gemBrugere() : void
+    + opretBruger(brugernavn:String, password:String) : Bruger
+    + login(brugernavn:String, password:String) : Bruger
+    + findBruger(brugernavn:String) : Bruger
+  }
+
+  class MedieKatalog {
+    - medier : List<model.Medie>
+    + MedieKatalog()
+    + tilføjMedie(m:Medie) : void
+    + søgTitel(titel:String) : Medie
+    + søgKategori(kategori:model.Kategori) : List<Medie>
+    + alleMedier() : List<Medie>
+  }
+}
+
+package "ui" {
+  class Menu {
+    - scanner : java.util.Scanner
+    - brugerManager : service.BrugerManager
+    - katalog : service.MedieKatalog
+    + Menu(brugerManager:BrugerManager, katalog:MedieKatalog)
+    + start() : void
+    + startMenu() : void
+    + hovedMenu(bruger:model.Bruger) : void
+    + visListeOgVælg(liste:List<model.Medie>, bruger:model.Bruger) : void
+  }
+}
+
+ui.Menu --> service.BrugerManager
+ui.Menu --> service.MedieKatalog
+service.BrugerManager --> model.Bruger
+service.MedieKatalog --> model.Medie
+@enduml
+

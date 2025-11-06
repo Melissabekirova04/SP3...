@@ -1,0 +1,35 @@
+@startuml
+!pragma layout smetana
+
+left to right direction
+skinparam classAttributeIconSize 0
+
+' ==== Klasser ====
+class Bruger
+abstract class Medie
+class Film
+class Serie
+class Sæson
+class Episode
+enum Kategori {
+  Crime
+  War
+  Drama
+  Family
+  Romance
+  "Sci-Fi"
+}
+
+
+' ==== Relationer ====
+Medie <|-- Film
+Medie <|-- Serie
+
+Bruger "1" --> "0..*" Medie : seteMedier
+Bruger "1" --> "0..*" Medie : gemteMedier
+
+Serie *-- "1..*" Sæson : sæsoner
+Sæson *-- "1..*" Episode : episoder
+
+Medie --> Kategori : kategori
+@enduml
