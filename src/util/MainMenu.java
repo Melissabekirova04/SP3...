@@ -4,33 +4,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainMenu {
-    // Hjælpeklasser til input/output og filhåndtering
-    TextUI ui = new TextUI();
-    FileIO io = new FileIO();
+    // Hjælpeklasse til tekst I/O
+    private final TextUI ui = new TextUI();
 
-    // Lister til brugere og film
-    private ArrayList<User> users = new ArrayList<>();
-    private User user;               // den aktuelle bruger
-    private List<Movies> movies;     // film indlæst fra CSV
+    // Liste over brugere
+    private final ArrayList<User> users = new ArrayList<>();
 
-    // Indlæs film ved start
+    // Den aktuelle bruger der er logget ind
+    private User user;
+
+    // Film indlæst fra CSV
+    private final List<Movies> movies;
+
+    // Indlæser film ved start
     public MainMenu() {
         movies = MovieCSVLoader.load("movies.csv");
     }
 
-    // Opret bruger
+    // Opretter en ny bruger og tilføj til listen
     public void createUser(String name) {
         user = new User(name);
         users.add(user);
     }
 
-    // Hovedløkken
+    // Hovedløkken for programmet
     public void runMJO() {
         ui.displayMsg("Welcome to MJO, " + user.getName() + "!");
-        ui.displayMsg("Loaded " + movies.size() + " movies from the CSV file.\n");
+        ui.displayMsg("Loaded " + movies.size() + " movies from the CSV file.");
+        ui.displayMsg("Registered users: " + users.size() + "\n"); // ← nu “queries” vi users-listen
 
         boolean running = true;
         while (running) {
+            // Vis menu
             ui.displayMsg("----- MAIN MENU -----");
             ui.displayMsg("1) Search by title");
             ui.displayMsg("2) Search by category");
@@ -38,35 +43,44 @@ public class MainMenu {
 
             String choice = ui.promptText("Choose an option: ");
 
-            if (choice.equals("1")) {
-                searchByTitle();
-            } else if (choice.equals("2")) {
-                searchByCategory();
-            } else if (choice.equals("0")) {
-                ui.displayMsg("Goodbye, " + user.getName() + "!");
-                running = false;
-            } else {
-                ui.displayMsg("Invalid choice. Please try again.");
+            //switch case
+            switch (choice) {
+                case "1":
+                    searchByTitle();
+                    break;
+                case "2":
+                    searchByCategory();
+                    break;
+                case "3":
+                    ui.displayMsg("Goodbye, " + user.getName() + "!");
+                    running = false;
+                    break;
+                default:
+                    ui.displayMsg("Invalid choice. Please try again.");
             }
         }
     }
 
     // Søger efter titel
     private void searchByTitle() {
+        // Bed brugeren om søgetekst
         String query = ui.promptText("Enter a movie title or part of a title: ");
         List<Movies> found = new ArrayList<>();
 
+        // Finder alle film der matcher
         for (Movies movie : movies) {
             if (movie.getTitle().toLowerCase().contains(query.toLowerCase())) {
                 found.add(movie);
             }
         }
 
+        // Ingen resultater?
         if (found.isEmpty()) {
             ui.displayMsg("No movies found with '" + query + "'.");
-        } else {
-            showMoviesAndPlay(found);
+            return;
         }
+
+        showMoviesAndPlay(found);
     }
 
     // Søger efter kategori
@@ -82,12 +96,13 @@ public class MainMenu {
 
         if (found.isEmpty()) {
             ui.displayMsg("No movies found in the category '" + category + "'.");
-        } else {
-            showMoviesAndPlay(found);
+            return;
         }
+
+        showMoviesAndPlay(found);
     }
 
-    // Viser søgeresultater og afspil valgt film
+    // Viser søgeresultaterne og afspil valgt film
     private void showMoviesAndPlay(List<Movies> movieList) {
         ui.displayMsg("\n----- SEARCH RESULTS -----");
 
@@ -109,5 +124,3 @@ public class MainMenu {
         }
     }
 }
-
-
