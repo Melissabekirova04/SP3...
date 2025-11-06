@@ -30,7 +30,7 @@ public class MainMenu {
     // Starter hovedprogrammet for den aktuelle bruger
     public void runMJO() {
         ui.displayMsg("Welcome to MJO, " + user.getName() + "!");
-        ui.displayMsg("Loaded " + movies.size() + " movies from the CSV file.\n");
+        ui.displayMsg("Loaded " + movies.size() +  ", movies for you to watch");
 
         boolean running = true;
         while (running) {

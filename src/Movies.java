@@ -8,6 +8,8 @@ public class Movies extends Media {
 
     @Override
     public void play() {
-        System.out.println(getTitle() + " afspilles nu... (" + getDuration() + " minutter)");
+        System.out.println(getTitle() + " is now playing... (" + getDuration() + " minutes)");
     }
+
 }
+
