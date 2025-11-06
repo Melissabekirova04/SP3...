@@ -5,9 +5,11 @@ public class Main {
         MainMenu menu = new MainMenu();
         TextUI ui = new TextUI();
 
+
         String name = ui.promptText("Please enter your name: ");
+
+
         menu.createUser(name);
         menu.runMJO();
-
     }
 }

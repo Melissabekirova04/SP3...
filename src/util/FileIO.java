@@ -1,11 +1,4 @@
-package util;/*
- *  Utility class to persist the Strings in an ArrayList
- *  To use, each object in a list must first be serialized (field values of the object are added to the same String, separated by comma)
- *
- *  TODO: To avoid leakage, both scanner and FileWriter must be closed, suggestion to use try-with-ressources in both methods
- *  TODO: catch exception if the file is found but empty
- * */
-
+package util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -14,10 +7,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FileIO {
-
-
-
-
     public void saveData(ArrayList<String> list, String path, String header){
         try {
 
@@ -41,7 +30,7 @@ public class FileIO {
             scan.nextLine(); // skip header "Name, Score"
 
             while (scan.hasNextLine()) {
-                String line = scan.nextLine();   //  "Egon, 1000000"
+                String line = scan.nextLine();
                 data.add(line);
             }
         } catch (FileNotFoundException e) {

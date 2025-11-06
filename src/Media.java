@@ -1,4 +1,6 @@
-public class Media {
+package util;
+
+public abstract class Media {
     private String title;
     private int releaseDate;
     private double rating;
@@ -10,7 +12,17 @@ public class Media {
         this.releaseDate = releaseDate;
         this.rating = rating;
         this.category = category;
+        this.duration = duration;
     }
 
+    // getters
+    public String getTitle() { return title; }
+    public int getReleaseDate() { return releaseDate; }
+    public double getRating() { return rating; }
+    public String getCategory() { return category; }
+    public int getDuration() { return duration; }
 
+    // abstrakt metode som Movies skal override
+    public abstract void play();
 }
+
