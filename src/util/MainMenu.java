@@ -15,7 +15,7 @@ public class MainMenu {
 
     // Indlæs film ved start
     public MainMenu() {
-        movies = MovieCSVLoader.load("movies.csv"); // fil skal ligge i projekt-roden
+        movies = MovieCSVLoader.load("movies.csv");
     }
 
     // Opret bruger
