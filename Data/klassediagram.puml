@@ -1,7 +1,6 @@
 @startuml
 !pragma layout smetana
 
-
 package "model" {
   class Bruger {
     - brugernavn : String
