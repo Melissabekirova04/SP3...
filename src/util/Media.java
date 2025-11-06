@@ -22,7 +22,7 @@ public abstract class Media {
     public String getCategory() { return category; }
     public int getDuration() { return duration; }
 
-    // abstrakt metode som Movies skal override
+    // skal implementeres i underklasser (fx Movies)
     public abstract void play();
 }
 

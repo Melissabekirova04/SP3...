@@ -10,6 +10,5 @@ public class Movies extends Media {
     public void play() {
         System.out.println(getTitle() + " is now playing... (" + getDuration() + " minutes)");
     }
-
 }
 
