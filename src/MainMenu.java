@@ -18,7 +18,7 @@ public class MainMenu {
 
     // programmet starter, indlæser filmene fra CSV-filen
     public MainMenu() {
-        movies = MovieCSVLoader.load("movies.csv"); // Sørg for at filen ligger i projektmappen
+        movies = MovieCSVLoader.load("movies.csv"); // søger for at filen ligger i projektmappen
     }
 
     // Opretter en ny bruger
