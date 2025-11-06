@@ -1,4 +1,4 @@
-public abstract class Media {
+public class Media {
     private String title;
     private int releaseDate;
     private double rating;
