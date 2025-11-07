@@ -62,5 +62,7 @@ public class MovieCSVLoader {
 
         return movies;
     }
+
+    System.out.println("hej");
 }
 
