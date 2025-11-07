@@ -17,7 +17,7 @@ public class TextUI {
         return sc.nextLine();
     }
 
-    // Spørger efter tal (enkelt og begyndervenligt)
+    // Spørger efter tal
     public int promptNumeric(String msg){
         displayMsg(msg);
         String input = sc.nextLine();
