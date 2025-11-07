@@ -25,7 +25,7 @@ public class FileIO {
         File file = new File(path);
         try {
             Scanner scan = new Scanner(file);
-            scan.nextLine(); // skip header
+            scan.nextLine();
             while (scan.hasNextLine()) data.add(scan.nextLine());
         } catch (FileNotFoundException e) {
             System.out.println("Filen findes ikke");
@@ -38,7 +38,7 @@ public class FileIO {
         File file = new File(path);
         try {
             Scanner scan = new Scanner(file);
-            scan.nextLine(); // skip header
+            scan.nextLine();
             for(int i = 0; i < data.length && scan.hasNextLine(); i++){
                 data[i] = scan.nextLine();
             }

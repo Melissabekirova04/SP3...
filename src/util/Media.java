@@ -22,7 +22,7 @@ public abstract class Media {
     public String getCategory() { return category; }
     public int getDuration() { return duration; }
 
-    // skal implementeres i underklasser (fx Movies)
+
     public abstract void play();
 }
 
