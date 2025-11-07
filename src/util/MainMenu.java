@@ -30,7 +30,7 @@ public class MainMenu {
     // Hovedløkken for programmet
     public void runMJO() {
         ui.displayMsg("Welcome to MJO, " + user.getName() + "!");
-        ui.displayMsg("Loaded " + movies.size() + " movies from the CSV file.");
+        ui.displayMsg("Loaded " + movies.size() + " movies from MJO.");
         ui.displayMsg("Registered users: " + users.size() + "\n"); // ← nu “queries” vi users-listen
 
         boolean running = true;
