@@ -6,7 +6,16 @@ public abstract class Media {
     private double rating;
     private String category;
     private int duration;
+    private int endDate;
 
+    public Media(String title, int releaseDate, int endDate, double rating, String category, int duration){
+        this.title = title;
+        this.releaseDate = releaseDate;
+        this.endDate = endDate;
+        this.rating = rating;
+        this.category = category;
+        this.duration = duration;
+    }
     public Media(String title, int releaseDate, double rating, String category, int duration) {
         this.title = title;
         this.releaseDate = releaseDate;
