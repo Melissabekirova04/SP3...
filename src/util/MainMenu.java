@@ -8,7 +8,6 @@ public class MainMenu {
     private final TextUI ui = new TextUI();
     private final FileIO io = new FileIO(); // bruges til at læse/skrives CSV
 
-    // Brugere i hukommelsen
     private final ArrayList<User> users = new ArrayList<>();
     private User user;
 
@@ -21,7 +20,7 @@ public class MainMenu {
 
 
 
-    // Indlæs alle brugere fra users.csv
+    // Indlæser alle brugere fra users.csv
     private void loadUsersFromCsv() {
 
         ArrayList<String> lines = io.readData(USERS_CSV);
@@ -34,7 +33,7 @@ public class MainMenu {
         }
     }
 
-    // Gem alle brugernavne til users.csv
+    // Gemmer alle brugernavne til users.csv
     private void saveUsersToCsv() {
         ArrayList<String> lines = new ArrayList<>();
         for (User u : users) {
@@ -44,7 +43,7 @@ public class MainMenu {
     }
 
 
-    // Opret bruger i hukommelsen og gem den i CSV
+    // Opretter bruger i hukommelsen og gemmer den i CSV
     public void createUser(String name) {
 
         for (User u : users) {
