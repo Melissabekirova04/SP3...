@@ -121,6 +121,8 @@ public class MainMenu {
             ui.displayMsg("----- MAIN MENU -----");
             ui.displayMsg("1) Search by title");
             ui.displayMsg("2) Search by category");
+            ui.displayMsg("3) Show list of: Saved for later");
+            ui.displayMsg("4) Show list of: Already watched");
             ui.displayMsg("0) Exit the program");
 
             String opt = ui.promptText("Choose an option: ");
@@ -131,6 +133,12 @@ public class MainMenu {
                     break;
                 case "2":
                     searchByCategory();
+                    break;
+                case "3":
+                    showSavedForLater();
+                    break;
+                case "4":
+                    showAlreadyWatched();
                     break;
                 case "0":
                     ui.displayMsg("Goodbye, " + this.user.getName() + "!");
@@ -223,7 +231,7 @@ public class MainMenu {
             int num = Integer.parseInt(choice);
             if (num == 0) return;
             Movies selected = list.get(num - 1);
-            selected.play();
+            selected.play(user);
         } catch (Exception e) {
             ui.displayMsg("Invalid choice. Please try again.");
         }
@@ -245,11 +253,37 @@ public class MainMenu {
             int number = Integer.parseInt(choice);
             if (number == 0) return;
             Series selectedSeries = seriesList.get(number - 1);
-            selectedSeries.play();
+            selectedSeries.play(user);
         } catch (Exception e) {
             ui.displayMsg("Invalid choice. Please try again.");
         }
     }
-}
+        private void showSavedForLater () {
+            if (user.getSavedForLater().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
+                ui.displayMsg("-------------Saved for later-------------\n");
+                for (Media m : user.getSavedForLater()) {
+                    ui.displayMsg(m.toString());
+                }
+            } else {
+                ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
+                runMJO();
+            }
+        }
+
+        private void showAlreadyWatched() {
+            if (user.getWatchedMedia().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
+                ui.displayMsg("-------------Watched Media-------------\n");
+                for (Media m : user.getWatchedMedia()) {
+                    ui.displayMsg(m.toString() + "\n");
+                }
+                //Tilføj en metode til at gense en af de film på listen, eller tryk 0 for at gå tilbage til start.
+            } else {
+                ui.promptText("Looks like you haven't seen anything yet... Press any key to go back to the main menu");
+                runMJO();
+            }
+        }
+
+    }
+
 
 

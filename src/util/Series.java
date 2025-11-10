@@ -7,7 +7,7 @@ public class Series extends Media {
     }
 
     @Override
-    public void play() {
+    public void play(User user) {
         System.out.println(getTitle() + " is now playing... (" + getDuration() + " minutes)");
     }
 }

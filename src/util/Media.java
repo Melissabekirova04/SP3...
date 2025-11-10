@@ -32,6 +32,10 @@ public abstract class Media {
     public int getDuration() { return duration; }
 
 
-    public abstract void play();
+    public abstract void play(User user);
+    @Override
+    public String toString() {
+        return title + " " + releaseDate + " " + " Category: " + category + " ⭐ " + rating;
+    }
 }
 
