@@ -31,8 +31,8 @@ public abstract class Media {
     public String getCategory() { return category; }
     public int getDuration() { return duration; }
 
-
     public abstract void play(User user);
+
     @Override
     public String toString() {
         return title + " " + releaseDate + " " + " Category: " + category + " ⭐ " + rating;
