@@ -2,6 +2,7 @@ package util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator; // ← NY import til sortering
 
 public class MainMenu {
     // Hjælpeklasser
@@ -11,20 +12,16 @@ public class MainMenu {
     private final ArrayList<User> users = new ArrayList<>();
     private User user;
 
-    // Film fra CSV
+    // Film og serier fra CSV
     private final List<Movies> movies = MovieCSVLoader.load("movies.csv");
     private final List<Series> series = SerieCSVLoader.load("Series.csv");
-
 
     // Filnavn til at gemme brugere
     private static final String USERS_CSV = "users.csv";
     private static final String USERS_HEADER = "username";
 
-
-
     // Indlæser alle brugere fra users.csv
     private void loadUsersFromCsv() {
-
         ArrayList<String> lines = io.readData(USERS_CSV);
         users.clear();
         for (String line : lines) {
@@ -44,10 +41,8 @@ public class MainMenu {
         io.saveData(lines, USERS_CSV, USERS_HEADER);
     }
 
-
     // Opretter bruger i hukommelsen og gemmer den i CSV
     public void createUser(String name) {
-
         for (User u : users) {
             if (u.getName().equalsIgnoreCase(name)) {
                 ui.displayMsg("User already exists. Please choose another name.");
@@ -115,7 +110,6 @@ public class MainMenu {
         ui.displayMsg("Loaded " + series.size() + " Series.");
         ui.displayMsg("Registered users: " + this.users.size() + "\n");
 
-
         boolean running = true;
         while (running) {
             ui.displayMsg("----- MAIN MENU -----");
@@ -123,6 +117,7 @@ public class MainMenu {
             ui.displayMsg("2) Search by category");
             ui.displayMsg("3) Show list of: Saved for later");
             ui.displayMsg("4) Show list of: Already watched");
+            ui.displayMsg("5) Filter by type/category/rating/year");
             ui.displayMsg("0) Exit the program");
 
             String opt = ui.promptText("Choose an option: ");
@@ -132,13 +127,16 @@ public class MainMenu {
                     searchByTitle(type);
                     break;
                 case "2":
-                    searchByCategory();
+                    searchByCategory();  // ← opdateret nedenfor med sortering
                     break;
                 case "3":
                     showSavedForLater();
                     break;
                 case "4":
                     showAlreadyWatched();
+                    break;
+                case "5":
+                    filterMenu();        // ← sorterer ud fra valgte filtre
                     break;
                 case "0":
                     ui.displayMsg("Goodbye, " + this.user.getName() + "!");
@@ -152,69 +150,199 @@ public class MainMenu {
 
     // --------- Søgninger og afspilning ---------
 
-    // Søger efter titel
+    // Søger efter titel (nu med mulighed for at filtrere og sortere de fundne resultater)
     private void searchByTitle(String searchOption) {
         switch (searchOption.toLowerCase()) {
-            case "movie":
-                // Ask for search text
+            case "movie": {
                 String query = ui.promptText("Enter a movie title or part of a title: ");
                 List<Movies> found = new ArrayList<>();
-
-                // Find all matching movies
                 for (Movies movie : movies) {
                     if (movie.getTitle().toLowerCase().contains(query.toLowerCase())) {
                         found.add(movie);
                     }
                 }
-
-                // No results?
                 if (found.isEmpty()) {
                     ui.displayMsg("No movies found with '" + query + "'.");
                     return;
                 }
 
+                // Valgfri filtrering + sortering på de fundne film
+                if (ui.promptText("Apply filters to these results? (y/n): ").trim().equalsIgnoreCase("y")) {
+                    String category = ui.promptText("Category contains (leave empty for any): ").trim();
+                    String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5) (leave empty for any): ").trim();
+                    String yearStr = ui.promptText("Year (exact, e.g. 1994) (leave empty for any): ").trim();
+
+                    Double minRating = null;
+                    if (!minRatingStr.isEmpty()) {
+                        try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
+                        catch (NumberFormatException e) { ui.displayMsg("Invalid rating format. Ignoring."); }
+                    }
+
+                    Integer year = null;
+                    if (!yearStr.isEmpty()) {
+                        try { year = Integer.parseInt(yearStr); }
+                        catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Ignoring."); }
+                    }
+
+                    found = filterMoviesOnSource(found, category, minRating, year);
+                    // sortér baseret på hvilke filtre der blev brugt
+                    sortMovies(found, minRating, year);
+
+                    if (found.isEmpty()) {
+                        ui.displayMsg("No movies matched your filters.");
+                        return;
+                    }
+                }
+
                 showMoviesAndPlay(found);
                 break;
-
-            case "series":
+            }
+            case "series": {
                 String seriesQuery = ui.promptText("Enter a series title or part of a title: ");
                 List<Series> foundSeries = new ArrayList<>();
-
                 for (Series serie : series) {
                     if (serie.getTitle().toLowerCase().contains(seriesQuery.toLowerCase())) {
                         foundSeries.add(serie);
                     }
                 }
-
                 if (foundSeries.isEmpty()) {
                     ui.displayMsg("No series found with '" + seriesQuery + "'.");
                     return;
                 }
 
+                // Valgfri filtrering + sortering på de fundne serier
+                if (ui.promptText("Apply filters to these results? (y/n): ").trim().equalsIgnoreCase("y")) {
+                    String category = ui.promptText("Category contains (leave empty for any): ").trim();
+                    String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5) (leave empty for any): ").trim();
+                    String yearStr = ui.promptText("Year (exact, e.g. 2010) (leave empty for any): ").trim();
+
+                    Double minRating = null;
+                    if (!minRatingStr.isEmpty()) {
+                        try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
+                        catch (NumberFormatException e) { ui.displayMsg("Invalid rating format. Ignoring."); }
+                    }
+
+                    Integer year = null;
+                    if (!yearStr.isEmpty()) {
+                        try { year = Integer.parseInt(yearStr); }
+                        catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Ignoring."); }
+                    }
+
+                    foundSeries = filterSeriesOnSource(foundSeries, category, minRating, year);
+                    // sortér baseret på hvilke filtre der blev brugt
+                    sortSeries(foundSeries, minRating, year);
+
+                    if (foundSeries.isEmpty()) {
+                        ui.displayMsg("No series matched your filters.");
+                        return;
+                    }
+                }
+
                 showSeriesAndPlay(foundSeries);
                 break;
-
+            }
             default:
                 ui.displayMsg("Search option '" + searchOption + "' is invalid. Please choose 'movie' or 'series'.");
-                break;
         }
     }
 
-
-
-    // Søger efter kategori
+    // Søger efter kategori (nu med valg af type, valgfri filter og sortering)
     private void searchByCategory() {
         String category = ui.promptText("Enter a category (e.g. Drama, War, Crime): ");
-        ArrayList<Movies> found = new ArrayList<>();
-        for (Movies m : movies) {
-            if (m.getCategory().toLowerCase().contains(category.toLowerCase())) {
-                found.add(m);
+        String type = ui.promptText("Search in 'movie' or 'series'?: ").trim();
+
+        if (type.equalsIgnoreCase("movie")) {
+            ArrayList<Movies> found = new ArrayList<>();
+            for (Movies m : movies) {
+                if (m.getCategory().toLowerCase().contains(category.toLowerCase())) {
+                    found.add(m);
+                }
             }
-        }
-        if (found.isEmpty()) {
-            ui.displayMsg("No movies found in the category '" + category + "'.");
-        } else {
+
+            if (found.isEmpty()) {
+                ui.displayMsg("No movies found in the category '" + category + "'.");
+                return;
+            }
+
+            String filterChoice = ui.promptText(
+                    "Apply additional filters to these movies? (y/n)\n" +
+                            "→ Example: rating 8.0, year 1994 (press Enter to skip)"
+            ).trim();
+
+            if (filterChoice.equalsIgnoreCase("y")) {
+                String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5). Leave empty to skip: ").trim();
+                String yearStr = ui.promptText("Exact release year (e.g. 2001). Leave empty to skip: ").trim();
+
+                Double minRating = null;
+                if (!minRatingStr.isEmpty()) {
+                    try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
+                    catch (NumberFormatException e) { ui.displayMsg("Invalid rating format, ignoring filter."); }
+                }
+
+                Integer year = null;
+                if (!yearStr.isEmpty()) {
+                    try { year = Integer.parseInt(yearStr); }
+                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format, ignoring filter."); }
+                }
+
+                found = filterMoviesOnSource(found, category, minRating, year);
+                // sortér efter valgte filtre
+                sortMovies(found, minRating, year);
+
+            } else {
+                // ingen ekstra filtre -> alfabetisk på titel
+                found.sort(Comparator.comparing(Movies::getTitle, String.CASE_INSENSITIVE_ORDER));
+            }
+
             showMoviesAndPlay(found);
+
+        } else if (type.equalsIgnoreCase("series")) {
+            ArrayList<Series> found = new ArrayList<>();
+            for (Series s : series) {
+                if (s.getCategory().toLowerCase().contains(category.toLowerCase())) {
+                    found.add(s);
+                }
+            }
+
+            if (found.isEmpty()) {
+                ui.displayMsg("No series found in the category '" + category + "'.");
+                return;
+            }
+
+            String filterChoice = ui.promptText(
+                    "Apply additional filters to these series? (y/n)\n" +
+                            "→ Example: rating 8.5, year 2015 (press Enter to skip)"
+            ).trim();
+
+            if (filterChoice.equalsIgnoreCase("y")) {
+                String minRatingStr = ui.promptText("Minimum rating (e.g. 7.0). Leave empty to skip: ").trim();
+                String yearStr = ui.promptText("Exact start year (e.g. 2010). Leave empty to skip: ").trim();
+
+                Double minRating = null;
+                if (!minRatingStr.isEmpty()) {
+                    try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
+                    catch (NumberFormatException e) { ui.displayMsg("Invalid rating format, ignoring filter."); }
+                }
+
+                Integer year = null;
+                if (!yearStr.isEmpty()) {
+                    try { year = Integer.parseInt(yearStr); }
+                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format, ignoring filter."); }
+                }
+
+                found = filterSeriesOnSource(found, category, minRating, year);
+                // sortér efter valgte filtre
+                sortSeries(found, minRating, year);
+
+            } else {
+                // ingen ekstra filtre -> alfabetisk på titel
+                found.sort(Comparator.comparing(Series::getTitle, String.CASE_INSENSITIVE_ORDER));
+            }
+
+            showSeriesAndPlay(found);
+
+        } else {
+            ui.displayMsg("Invalid type. Please choose 'movie' or 'series'.");
         }
     }
 
@@ -236,18 +364,16 @@ public class MainMenu {
             ui.displayMsg("Invalid choice. Please try again.");
         }
     }
+
     private void showSeriesAndPlay(List<Series> seriesList) {
         ui.displayMsg("\n----- SEARCH RESULTS -----");
-
         for (int i = 0; i < seriesList.size(); i++) {
             Series serie = seriesList.get(i);
             System.out.println((i + 1) + ") " + serie.getTitle() + " (" + serie.getReleaseDate() + ") "
                     + serie.getCategory() + " ⭐" + serie.getRating());
         }
 
-        String choice = ui.promptText(
-                "\u001B[31mE\u001B[33mn\u001B[32mt\u001B[34me\u001B[35mr \u001B[31mt\u001B[33mh\u001B[32me \u001B[34mn\u001B[35mu\u001B[31mm\u001B[33mb\u001B[32me\u001B[34mr \u001B[35mo\u001B[31mf \u001B[33ms\u001B[32me\u001B[34mr\u001B[35mi\u001B[31es \u001B[33mw\u001B[32ma\u001B[34mn\u001B[35mt \u001B[31mt\u001B[33mo \u001B[32mp\u001B[34ml\u001B[35ma\u001B[31my \u001B[33m(\u001B[32mo\u001B[34mr 0 \u001B[35mto \u001B[31mg\u001B[33mo \u001B[32mback): \u001B[0m"
-        );
+        String choice = ui.promptText("Enter the number of the series to play (or 0 to go back): ");
 
         try {
             int number = Integer.parseInt(choice);
@@ -258,32 +384,179 @@ public class MainMenu {
             ui.displayMsg("Invalid choice. Please try again.");
         }
     }
-        private void showSavedForLater () {
-            if (user.getSavedForLater().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
-                ui.displayMsg("-------------Saved for later-------------\n");
-                for (Media m : user.getSavedForLater()) {
-                    ui.displayMsg(m.toString());
-                }
-            } else {
-                ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
-                runMJO();
-            }
-        }
 
-        private void showAlreadyWatched() {
-            if (user.getWatchedMedia().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
-                ui.displayMsg("-------------Watched Media-------------\n");
-                for (Media m : user.getWatchedMedia()) {
-                    ui.displayMsg(m.toString() + "\n");
-                }
-                //Tilføj en metode til at gense en af de film på listen, eller tryk 0 for at gå tilbage til start.
-            } else {
-                ui.promptText("Looks like you haven't seen anything yet... Press any key to go back to the main menu");
-                runMJO();
+    private void showSavedForLater () {
+        if (user.getSavedForLater().size() >= 1) {
+            ui.displayMsg("-------------Saved for later-------------\n");
+            for (Media m : user.getSavedForLater()) {
+                ui.displayMsg(m.toString());
             }
+        } else {
+            ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
+            runMJO();
         }
-
     }
+
+    private void showAlreadyWatched() {
+        if (user.getWatchedMedia().size() >= 1) {
+            ui.displayMsg("-------------Watched Media-------------\n");
+            for (Media m : user.getWatchedMedia()) {
+                ui.displayMsg(m.toString() + "\n");
+            }
+        } else {
+            ui.promptText("Looks like you haven't seen anything yet... Press any key to go back to the main menu");
+            runMJO();
+        }
+    }
+
+    // -------------------- HJÆLPE-METODER TIL FILTER & SORT --------------------
+
+    // Generel filter-menu
+    private void filterMenu() {
+        String type = ui.promptText("Filter what? Type 'movie' or 'series' (or empty to cancel): ").trim();
+        if (type.isEmpty()) return;
+
+        String filterChoice = ui.promptText("Filter by: 'category', 'rating' or 'year': ").trim().toLowerCase();
+
+        if (type.equalsIgnoreCase("movie")) {
+            ArrayList<Movies> result = new ArrayList<>(movies);
+
+            switch (filterChoice) {
+                case "category": {
+                    String category = ui.promptText("Enter category (e.g. Drama, War, Crime): ").trim();
+                    // filter
+                    result.removeIf(m -> !m.getCategory().toLowerCase().contains(category.toLowerCase()));
+                    // sortér alfabetisk (A→Z)
+                    result.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
+                    break;
+                }
+                case "rating": {
+                    // ingen ekstra input – vis bare bedst ratede først
+                    result.sort((a, b) -> Double.compare(b.getRating(), a.getRating())); // høj → lav
+                    break;
+                }
+                case "year": {
+                    String yearStr = ui.promptText("Enter year (e.g. 1994): ").trim();
+                    Integer year = null;
+                    try { year = Integer.parseInt(yearStr); }
+                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Try again."); return; }
+
+                    // filter
+                    Integer finalYear = year;
+                    result.removeIf(m -> m.getReleaseDate() != finalYear);
+                    // sortér år stigende (giver mening hvis der alligevel er flere)
+                    result.sort((a, b) -> Integer.compare(a.getReleaseDate(), b.getReleaseDate()));
+                    break;
+                }
+                default:
+                    ui.displayMsg("Invalid filter type. Please choose 'category', 'rating' or 'year'.");
+                    return;
+            }
+
+            if (result.isEmpty()) {
+                ui.displayMsg("No movies matched your filters.");
+            } else {
+                showMoviesAndPlay(result);
+            }
+
+        } else if (type.equalsIgnoreCase("series")) {
+            ArrayList<Series> result = new ArrayList<>(series);
+
+            switch (filterChoice) {
+                case "category": {
+                    String category = ui.promptText("Enter category (e.g. Drama, War, Crime): ").trim();
+                    // filter
+                    result.removeIf(s -> !s.getCategory().toLowerCase().contains(category.toLowerCase()));
+                    // sortér alfabetisk (A→Z)
+                    result.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
+                    break;
+                }
+                case "rating": {
+                    // vis bedst ratede først
+                    result.sort((a, b) -> Double.compare(b.getRating(), a.getRating())); // høj → lav
+                    break;
+                }
+                case "year": {
+                    String yearStr = ui.promptText("Enter start year (e.g. 2010): ").trim();
+                    Integer year = null;
+                    try { year = Integer.parseInt(yearStr); }
+                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Try again."); return; }
+
+                    // filter (vi bruger startår = getReleaseDate())
+                    Integer finalYear = year;
+                    result.removeIf(s -> s.getReleaseDate() != finalYear);
+                    // sortér år stigende
+                    result.sort((a, b) -> Integer.compare(a.getReleaseDate(), b.getReleaseDate()));
+                    break;
+                }
+                default:
+                    ui.displayMsg("Invalid filter type. Please choose 'category', 'rating' or 'year'.");
+                    return;
+            }
+
+            if (result.isEmpty()) {
+                ui.displayMsg("No series matched your filters.");
+            } else {
+                showSeriesAndPlay(result);
+            }
+
+        } else {
+            ui.displayMsg("Invalid type. Please choose 'movie' or 'series'.");
+        }
+    }
+
+
+    // Filtrér film på en given liste (bruges af både menu 5 og søgning)
+    private ArrayList<Movies> filterMoviesOnSource(List<Movies> source, String category, Double minRating, Integer year) {
+        ArrayList<Movies> result = new ArrayList<>();
+        boolean hasCategory = category != null && !category.isEmpty();
+
+        for (Movies m : source) {
+            if (hasCategory && !m.getCategory().toLowerCase().contains(category.toLowerCase())) continue;
+            if (minRating != null && m.getRating() < minRating) continue;
+            if (year != null && m.getReleaseDate() != year) continue;
+            result.add(m);
+        }
+        return result;
+    }
+
+    // Filtrér serier på en given liste (bruges af både menu 5 og søgning)
+    private ArrayList<Series> filterSeriesOnSource(List<Series> source, String category, Double minRating, Integer year) {
+        ArrayList<Series> result = new ArrayList<>();
+        boolean hasCategory = category != null && !category.isEmpty();
+
+        for (Series s : source) {
+            if (hasCategory && !s.getCategory().toLowerCase().contains(category.toLowerCase())) continue;
+            if (minRating != null && s.getRating() < minRating) continue;
+            if (year != null && s.getReleaseDate() != year) continue;
+            result.add(s);
+        }
+        return result;
+    }
+
+
+    // Film: rating valgt -> rating desc, ellers år valgt -> år asc, ellers alfabetisk
+    private void sortMovies(List<Movies> list, Double minRating, Integer year) {
+        if (minRating != null) {
+            list.sort(Comparator.comparingDouble(Movies::getRating).reversed());
+        } else if (year != null) {
+            list.sort(Comparator.comparingInt(Movies::getReleaseDate));
+        } else {
+            list.sort(Comparator.comparing(Movies::getTitle, String.CASE_INSENSITIVE_ORDER));
+        }
+    }
+
+    // Serier: rating valgt -> rating desc, ellers år valgt -> år asc, ellers alfabetisk
+    private void sortSeries(List<Series> list, Double minRating, Integer year) {
+        if (minRating != null) {
+            list.sort(Comparator.comparingDouble(Series::getRating).reversed());
+        } else if (year != null) {
+            list.sort(Comparator.comparingInt(Series::getReleaseDate)); // startår
+        } else {
+            list.sort(Comparator.comparing(Series::getTitle, String.CASE_INSENSITIVE_ORDER));
+        }
+    }
+}
 
 
 
