@@ -18,38 +18,57 @@ public class MainMenu {
 
     // Filnavn til at gemme brugere
     private static final String USERS_CSV = "users.csv";
-    private static final String USERS_HEADER = "username";
+    private static final String USERS_HEADER = "username;password";
 
     // Indlæser alle brugere fra users.csv
     private void loadUsersFromCsv() {
+
         ArrayList<String> lines = io.readData(USERS_CSV);
         users.clear();
+
+        // bruger trimmed for at undgå unødvendige mellemrum
         for (String line : lines) {
-            String name = line.trim();
-            if (!name.isEmpty()) {
-                users.add(new User(name));
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.equalsIgnoreCase(USERS_HEADER)) {
+                continue; // springer tom linje eller header over
+            }
+
+            String[] parts = trimmed.split(";"); // Deler linjen op ved semikolon(Name og password bliver delt op)
+            String name = parts [0].trim();
+
+            String password;
+            if(parts.length > 1){ // tjekker om der findes en anden del (password) efter semikolon
+                password = parts[1].trim(); // hvis ja, gem den som password
+            } else {
+                password = ""; // ellers så sæt password til tom tekst
+            }
+            if (!name.isEmpty()){
+                users.add(new User(name, password)); // tilføjer brugeren med navn og password til listen
             }
         }
     }
 
-    // Gemmer alle brugernavne til users.csv
+    // Gemmer alle brugernavne + passwords til users.csv
     private void saveUsersToCsv() {
         ArrayList<String> lines = new ArrayList<>();
         for (User u : users) {
-            lines.add(u.getName());
+            lines.add(u.getName() + ";" + u.getPassword());
         }
         io.saveData(lines, USERS_CSV, USERS_HEADER);
     }
 
     // Opretter bruger i hukommelsen og gemmer den i CSV
     public void createUser(String name) {
+
         for (User u : users) {
             if (u.getName().equalsIgnoreCase(name)) {
                 ui.displayMsg("User already exists. Please choose another name.");
                 return;
             }
         }
-        this.user = new User(name);
+        String password = ui.promptText("Create passwords: ");
+
+        this.user = new User(name, password);
         this.users.add(this.user);
         saveUsersToCsv(); // gem efter oprettelse
     }
@@ -82,15 +101,17 @@ public class MainMenu {
                     return;
                 }
                 String existingName = ui.promptText("Enter your username: ");
+                String password = ui.promptText("Enter your password: ");
+
                 User found = null;
                 for (User u : this.users) {
-                    if (u.getName().equalsIgnoreCase(existingName)) {
+                    if (u.getName().equalsIgnoreCase(existingName) && u.getPassword().equals(password)) {
                         found = u;
                         break;
                     }
                 }
                 if (found == null) {
-                    ui.displayMsg("User not found. Please try again.");
+                    ui.displayMsg("Wrong username or password. Please try again.");
                     return;
                 }
                 this.user = found;
