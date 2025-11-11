@@ -535,7 +535,7 @@ public class MainMenu {
     }
 
 
-    // Film: rating valgt -> rating desc, ellers år valgt -> år asc, ellers alfabetisk
+    // Film: rating valgt -> rating, ellers år valgt -> år  ellers alfabetisk
     private void sortMovies(List<Movies> list, Double minRating, Integer year) {
         if (minRating != null) {
             list.sort(Comparator.comparingDouble(Movies::getRating).reversed());
@@ -546,7 +546,7 @@ public class MainMenu {
         }
     }
 
-    // Serier: rating valgt -> rating desc, ellers år valgt -> år asc, ellers alfabetisk
+    // Serier: rating valgt -> rating, ellers år valgt -> år, ellers alfabetisk
     private void sortSeries(List<Series> list, Double minRating, Integer year) {
         if (minRating != null) {
             list.sort(Comparator.comparingDouble(Series::getRating).reversed());
