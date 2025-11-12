@@ -7,7 +7,6 @@ import java.util.Scanner;
 
 public class MovieCSVLoader {
 
-
     public static List<Movies> load(String path) {
         List<Movies> movies = new ArrayList<>();
 
@@ -48,8 +47,24 @@ public class MovieCSVLoader {
                     System.out.println(" Could not read rating for: " + title);
                 }
 
+                // NYT: prøv at læse varighed som kolonne 5 (hvis den findes)
+                int duration = 0; // fallback hvis CSV ikke har varighed
+                if (parts.length >= 5) {
+                    String durStr = parts[4].trim();
+                    // tillad formater som "175", "175 min", "175min"
+                    durStr = durStr.replace("min", "").trim();
+                    // håndter evt. tom streng
+                    if (!durStr.isEmpty()) {
+                        try {
+                            duration = Integer.parseInt(durStr);
+                        } catch (NumberFormatException e) {
+                            // hvis vi ikke kan parse, beholder vi 0
+                            System.out.println(" Could not read duration for: " + title + " -> '" + parts[4].trim() + "'");
+                        }
+                    }
+                }
+
                 // Opretter et Movie-objekt og tilføj til listen
-                int duration = 0; // vi har ingen spilletid i CSV'en
                 Movies movie = new Movies(title, year, rating, category, duration);
                 movies.add(movie);
             }
@@ -62,7 +77,6 @@ public class MovieCSVLoader {
 
         return movies;
     }
-
-
 }
+
 
