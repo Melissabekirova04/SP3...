@@ -384,6 +384,7 @@ public class MainMenu {
         } catch (Exception e) {
             ui.displayMsg("Invalid choice. Please try again.");
         }
+
     }
 
     private void showSeriesAndPlay(List<Series> seriesList) {
@@ -599,6 +600,7 @@ public class MainMenu {
             list.sort(Comparator.comparing(Series::getTitle, String.CASE_INSENSITIVE_ORDER));
         }
     }
+
 }
 
 
