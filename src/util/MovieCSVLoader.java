@@ -53,7 +53,7 @@ public class MovieCSVLoader {
                     String durStr = parts[4].trim();
                     // tillad formater som "175", "175 min", "175min"
                     durStr = durStr.replace("min", "").trim();
-                    // håndter evt. tom streng
+
                     if (!durStr.isEmpty()) {
                         try {
                             duration = Integer.parseInt(durStr);
