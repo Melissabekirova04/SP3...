@@ -31,7 +31,7 @@ public class Movies extends Media {
             }
             case "3" -> {
                 if(user.getSavedForLater().contains(this)) {
-                    ui.displayMsg(this.getTitle() + " was removed from your watch later list\nPress any button to return to the main menu");
+                    ui.promptText(this.getTitle() + " was removed from your watch later list\nPress any button to return to the main menu");
                     user.removeSavedForLater(this);
                 }else{
                     ui.displayMsg(this.getTitle() + " could not be removed because it was was never added to the list");
