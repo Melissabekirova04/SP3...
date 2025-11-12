@@ -128,7 +128,7 @@ public class MainMenu {
             String opt = ui.promptText("Choose an option: ");
             switch (opt) {
                 case "1":
-                    String type = ui.promptText("Do you want to search for a movie or a series? ");
+                    String type = ui.promptText("Do you want to search for:\n1) Movies\n2) Series");
                     searchByTitle(type);
                     break;
                 case "2":
@@ -155,7 +155,7 @@ public class MainMenu {
     // Søger efter titel
     private void searchByTitle(String searchOption) {
         switch (searchOption.toLowerCase()) {
-            case "movie":
+            case "1":
                 // Ask for search text
                 String query = ui.promptText("Enter a movie title or part of a title: ");
                 List<Movies> found = new ArrayList<>();
@@ -176,7 +176,7 @@ public class MainMenu {
                 showMoviesAndPlay(found);
                 break;
 
-            case "series":
+            case "2":
                 String seriesQuery = ui.promptText("Enter a series title or part of a title: ");
                 List<Series> foundSeries = new ArrayList<>();
 
@@ -258,32 +258,54 @@ public class MainMenu {
             ui.displayMsg("Invalid choice. Please try again.");
         }
     }
-        private void showSavedForLater () {
-            if (user.getSavedForLater().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
-                ui.displayMsg("-------------Saved for later-------------\n");
-                for (Media m : user.getSavedForLater()) {
-                    ui.displayMsg(m.toString());
-                }
-            } else {
-                ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
-                runMJO();
+    private void showSavedForLater () {
+        if (user.getSavedForLater().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
+            ui.displayMsg("-------------Saved for later-------------");
+            for (int i=0; i<user.getSavedForLater().size(); i++) {
+                Media m = user.getSavedForLater().get(i);
+                ui.displayMsg(i+1 + ") " + m.getTitle() + " (" + m.getReleaseDate() + "), " + m.getCategory() + ", " + m.getRating());
             }
-        }
-
-        private void showAlreadyWatched() {
-            if (user.getWatchedMedia().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
-                ui.displayMsg("-------------Watched Media-------------\n");
-                for (Media m : user.getWatchedMedia()) {
-                    ui.displayMsg(m.toString() + "\n");
-                }
-                //Tilføj en metode til at gense en af de film på listen, eller tryk 0 for at gå tilbage til start.
-            } else {
-                ui.promptText("Looks like you haven't seen anything yet... Press any key to go back to the main menu");
-                runMJO();
+            String choice = ui.promptText("Chose the number of a movie / show you want to select or press 0 to go back to the main menu");
+            try {
+                int number = Integer.parseInt(choice);
+                if (number == 0) return;
+                Media selectedMedia = user.getSavedForLater().get(number - 1);
+                selectedMedia.play(user);
+            } catch (Exception e) {
+                ui.displayMsg("Invalid choice. Please try again.");
             }
-        }
 
+        } else {
+            ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
+            runMJO();
+        }
     }
+
+    private void showAlreadyWatched() {
+        if (user.getWatchedMedia().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
+            ui.displayMsg("-------------Already watched-------------");
+            for (int i=0; i<user.getWatchedMedia().size(); i++) {
+                Media m = user.getWatchedMedia().get(i);
+                ui.displayMsg(i+1 + ") " + m.getTitle() + " (" + m.getReleaseDate() + "), " + m.getCategory() + ", " + m.getRating());
+            }
+            String choice = ui.promptText("Chose the number of a movie / show you want to select or press 0 to go back to the main menu");
+            try {
+                int number = Integer.parseInt(choice);
+                if (number == 0) return;
+                Media selectedMedia = user.getWatchedMedia().get(number - 1);
+                selectedMedia.play(user);
+            } catch (Exception e) {
+                ui.displayMsg("Invalid choice. Please try again.");
+            }
+
+        } else {
+            ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
+            runMJO();
+        }
+    }
+}
+
+
 
 
 
