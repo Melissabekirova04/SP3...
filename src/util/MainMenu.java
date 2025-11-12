@@ -2,7 +2,7 @@ package util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Comparator; // ← NY import til sortering
+import java.util.Comparator;
 
 public class MainMenu {
     // Hjælpeklasser
