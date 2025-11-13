@@ -445,144 +445,182 @@ public class MainMenu {
 
     // -------------------- HJÆLPE-METODER TIL FILTER & SORT --------------------
 
-    // Generel filter-menu
+    // Generel filter-menu: lader brugeren vælge type (film/serie) og filter (kategori/rating/år)
     private void filterMenu() {
+        // Spørger hvad der skal filtreres: film eller serier
         String type = ui.promptText("Filter what? Type 'movie' or 'series' (or empty to cancel): ").trim();
-        if (type.isEmpty()) return;
+        if (type.isEmpty()) return; // tomt svar = afbryd
 
+        // Spørger hvilken slags filter der skal bruges
         String filterChoice = ui.promptText("Filter by: 'category', 'rating' or 'year': ").trim().toLowerCase();
 
+        // Hvis der filtreres på film
         if (type.equalsIgnoreCase("movie")) {
+            // Starter med en kopi af alle film
             ArrayList<Movies> result = new ArrayList<>(movies);
 
+            // Vælger filter-type for film
             switch (filterChoice) {
                 case "category": {
+                    // Bruger skriver en kategori-tekst, fx "Drama"
                     String category = ui.promptText("Enter category (e.g. Drama, War, Crime): ").trim();
-                    // filter
+                    // Filtrer: fjern alle film som ikke indeholder kategorien i deres kategori-tekst
                     result.removeIf(m -> !m.getCategory().toLowerCase().contains(category.toLowerCase()));
-                    // sortér alfabetisk (A→Z)
+                    // Sorter alfabetisk efter titel (A → Z)
                     result.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
                     break;
                 }
                 case "rating": {
-                    // vis bedst ratede først
+                    // Sorter efter rating, højeste rating først
                     result.sort((a, b) -> Double.compare(b.getRating(), a.getRating())); // høj → lav
                     break;
                 }
                 case "year": {
+                    // Spørger efter årstal
                     String yearStr = ui.promptText("Enter year (e.g. 1994): ").trim();
-                    Integer year = parseYear(yearStr);
-                    if (year == null) return;
+                    Integer year = parseYear(yearStr); // prøver at lave det om til et tal
+                    if (year == null) return; // hvis ugyldigt input, stoppes metoden
 
-                    // filter
+                    // Filtrer: behold kun film hvor release year = valgt år
                     Integer finalYear = year;
                     result.removeIf(m -> m.getReleaseDate() != finalYear);
-                    // sortér år stigende (giver mening hvis der alligevel er flere)
+                    // Sorter stigende efter år (hvis der mod forventning er flere år)
                     result.sort((a, b) -> Integer.compare(a.getReleaseDate(), b.getReleaseDate()));
                     break;
                 }
                 default:
+                    // Hvis brugeren skrev noget andet end category/rating/year
                     ui.displayMsg("Invalid filter type. Please choose 'category', 'rating' or 'year'.");
                     return;
             }
 
+            // Hvis ingen film matcher, sig det til brugeren
             if (result.isEmpty()) {
                 ui.displayMsg("No movies matched your filters.");
             } else {
+                // Ellers vis listen og lad brugeren vælge noget at afspille
                 showMoviesAndPlay(result);
             }
 
+            // Hvis der filtreres på serier
         } else if (type.equalsIgnoreCase("series")) {
+            // Starter med en kopi af alle serier
             ArrayList<Series> result = new ArrayList<>(series);
 
+            // Vælger filter-type for serier
             switch (filterChoice) {
                 case "category": {
+                    // Bruger skriver en kategori-tekst
                     String category = ui.promptText("Enter category (e.g. Drama, War, Crime): ").trim();
-                    // filter
+                    // Filtrer: fjern serier der ikke matcher kategorien
                     result.removeIf(s -> !s.getCategory().toLowerCase().contains(category.toLowerCase()));
-                    // sortér alfabetisk (A→Z)
+                    // Sorter alfabetisk efter titel
                     result.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
                     break;
                 }
                 case "rating": {
-                    // vis bedst ratede først
+                    // Sorter serier efter rating, bedste først
                     result.sort((a, b) -> Double.compare(b.getRating(), a.getRating())); // høj → lav
                     break;
                 }
                 case "year": {
+                    // Spørger efter startår for serien
                     String yearStr = ui.promptText("Enter start year (e.g. 2010): ").trim();
                     Integer year = parseYear(yearStr);
                     if (year == null) return;
 
-                    // filter (vi bruger startår = getReleaseDate())
+                    // Filtrer: behold kun serier der starter i det år
                     Integer finalYear = year;
                     result.removeIf(s -> s.getReleaseDate() != finalYear);
-                    // sortér år stigende
+                    // Sorter stigende efter år
                     result.sort((a, b) -> Integer.compare(a.getReleaseDate(), b.getReleaseDate()));
                     break;
                 }
                 default:
+                    // Ugyldigt filtervalg
                     ui.displayMsg("Invalid filter type. Please choose 'category', 'rating' or 'year'.");
                     return;
             }
 
+            // Hvis ingen serier matcher, sig det
             if (result.isEmpty()) {
                 ui.displayMsg("No series matched your filters.");
             } else {
+                // Ellers vis liste og lad brugeren vælge en serie
                 showSeriesAndPlay(result);
             }
 
         } else {
+            // Hvis brugeren ikke skrev "movie" eller "series"
             ui.displayMsg("Invalid type. Please choose 'movie' or 'series'.");
         }
     }
 
     // Filtrér film på en given liste (bruges af både menu 5 og søgning)
+    // Her kan vi filtrere på kategori, minimum rating og år (alle er valgfrie)
     private ArrayList<Movies> filterMoviesOnSource(List<Movies> source, String category, Double minRating, Integer year) {
         ArrayList<Movies> result = new ArrayList<>();
-        boolean hasCategory = category != null && !category.isEmpty();
+        boolean hasCategory = category != null && !category.isEmpty(); // tjekker om kategori-filteret er aktivt
 
         for (Movies m : source) {
+            // Hvis vi filtrerer på kategori og filmen ikke matcher, spring den over
             if (hasCategory && !m.getCategory().toLowerCase().contains(category.toLowerCase())) continue;
+            // Hvis vi filtrerer på minimum rating, og filmen har lavere rating, spring den over
             if (minRating != null && m.getRating() < minRating) continue;
+            // Hvis vi filtrerer på år, og filmen ikke har det år, spring den over
             if (year != null && m.getReleaseDate() != year) continue;
+            // Hvis alle filtre er passeret, tilføj filmen til resultatlisten
             result.add(m);
         }
         return result;
     }
 
     // Filtrér serier på en given liste (bruges af både menu 5 og søgning)
+    // Samme logik som filterMoviesOnSource, bare for Series
     private ArrayList<Series> filterSeriesOnSource(List<Series> source, String category, Double minRating, Integer year) {
         ArrayList<Series> result = new ArrayList<>();
-        boolean hasCategory = category != null && !category.isEmpty();
+        boolean hasCategory = category != null && !category.isEmpty(); // tjekker om kategori-filteret er aktivt
 
         for (Series s : source) {
+            // Kategori-filter
             if (hasCategory && !s.getCategory().toLowerCase().contains(category.toLowerCase())) continue;
+            // Rating-filter
             if (minRating != null && s.getRating() < minRating) continue;
+            // Års-filter (releaseDate bruges som startår)
             if (year != null && s.getReleaseDate() != year) continue;
+            // Hvis alle filtre gik igennem, tilføjes serien
             result.add(s);
         }
         return result;
     }
 
-    // Film: rating valgt -> rating, ellers år valgt -> år  ellers alfabetisk
+    // Sorterer film-listen alt efter hvilke filtre der er brugt:
+    // hvis der er valgt minRating → sorter efter rating
+    // ellers hvis der er valgt år → sorter efter år
+    // ellers sorter alfabetisk efter titel
     private void sortMovies(List<Movies> list, Double minRating, Integer year) {
         if (minRating != null) {
+            // Sortér efter rating (bedst først)
             list.sort(Comparator.comparingDouble(Movies::getRating).reversed());
         } else if (year != null) {
+            // Sortér efter år (stigende)
             list.sort(Comparator.comparingInt(Movies::getReleaseDate));
         } else {
+            // Standard: sorter alfabetisk efter titel
             list.sort(Comparator.comparing(Movies::getTitle, String.CASE_INSENSITIVE_ORDER));
         }
     }
 
-    // Serier: rating valgt -> rating, ellers år valgt -> år, ellers alfabetisk
+    // Samme som sortMovies, bare for serier
     private void sortSeries(List<Series> list, Double minRating, Integer year) {
         if (minRating != null) {
+            // Sortér efter rating (bedst først)
             list.sort(Comparator.comparingDouble(Series::getRating).reversed());
         } else if (year != null) {
+            // Sortér efter startår for serien
             list.sort(Comparator.comparingInt(Series::getReleaseDate)); // startår
         } else {
+            // Standard: alfabetisk på titel
             list.sort(Comparator.comparing(Series::getTitle, String.CASE_INSENSITIVE_ORDER));
         }
     }
