@@ -2,10 +2,13 @@ import util.MainMenu;
 
 public class Main {
     public static void main(String[] args) {
-        // Opret hovedmenu-objektet
-        MainMenu menu = new MainMenu();
+        try {
+            MainMenu menu = new MainMenu();
+            menu.startMenu();
 
-        // Start programmet med login / opret bruger
-        menu.startMenu();
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+
+        }
     }
 }

@@ -1,51 +1,62 @@
 package util;
 
-import java.util.ArrayList;
-import java.util.Objects;
-
 public class Movies extends Media {
-    private TextUI ui = new TextUI();
+    private final TextUI ui = new TextUI();
 
     public Movies(String title, int releaseDate, double rating, String category, int duration) {
         super(title, releaseDate, rating, category, duration);
     }
 
     @Override
-    public void play(User user) {   //Tilføjet user som argument, så mediet bliver tilføjet til brugeren.
-        String choice = ui.promptText("Do you want to: \n" + "1) Play " + getTitle()+ "\n2) Add to watch later \n" +
-                "3) Delete from watch later\n0) Go back to main menu");
-        switch (choice) {
-            case "1" -> {
-                user.addWatchedMedia(this); //Tilføjer det valgte medie til brugerens already watched arraylist.
-                user.removeSavedForLater(this); //Fjerner filmen fra se senere listen.
-                System.out.print(getTitle() + " is now playing... (" + getDuration() + " minutes)\n");
-            }
-            case "2" -> {
-                if(user.getSavedForLater().contains(this)) {    //Checks if the user has already added the movie.
-                    ui.displayMsg(this.getTitle() + " is already in your saved for later list.");
-                    play(user);
-                }else {
-                    ui.promptText("Added " + getTitle() + " to watch later, press any key to return to main menu");
-                    user.addSavedForLater(this);
-                }
-            }
-            case "3" -> {
-                if(user.getSavedForLater().contains(this)) {
-                    ui.promptText(this.getTitle() + " was removed from your watch later list\nPress any button to return to the main menu");
+    public void play(User user) {   // Tilføjet user som argument, så mediet bliver tilføjet til brugeren.
+        boolean running = true;
+
+        while (running) {
+            String choice = ui.promptText(
+                    "Do you want to:\n" +
+                            "1) Play " + getTitle() + "\n" +
+                            "2) Add to watch later\n" +
+                            "3) Delete from watch later\n" +
+                            "0) Go back to main menu"
+            );
+
+            switch (choice) {
+                case "1" -> {
+                    // Tilføj til already watched og fjern fra watch later (hvis den var der)
+                    user.addWatchedMedia(this);
                     user.removeSavedForLater(this);
-                }else{
-                    ui.displayMsg(this.getTitle() + " could not be removed because it was was never added to the list");
-                    play(user);
+                    ui.displayMsg(getTitle() + " is now playing... (" + getDuration() + " minutes)");
+                    running = false; // tilbage til menuen der kaldte play()
                 }
-            }
-            case "0" -> ui.displayMsg("Returning to main menu.");
-            case null, default -> {
-                ui.displayMsg("Invalid choice, try again");
-                play(user);
+
+                case "2" -> {
+                    if (user.getSavedForLater().contains(this)) {    // Tjekker om filmen allerede er gemt
+                        ui.displayMsg(getTitle() + " is already in your 'watch later' list.");
+                    } else {
+                        user.addSavedForLater(this);
+                        ui.promptText("Added " + getTitle() + " to watch later. Press any key to return to the main menu.");
+                        running = false;
+                    }
+                }
+
+                case "3" -> {
+                    if (user.getSavedForLater().contains(this)) {
+                        user.removeSavedForLater(this);
+                        ui.promptText(getTitle() + " was removed from your watch later list.\nPress any key to return to the main menu.");
+                        running = false;
+                    } else {
+                        ui.displayMsg(getTitle() + " could not be removed because it was never added to the list.");
+                        // bliver i løkken, så brugeren kan vælge noget andet
+                    }
+                }
+
+                case "0" -> {
+                    ui.displayMsg("Returning to main menu.");
+                    running = false;
+                }
+
+                default -> ui.displayMsg("Invalid choice, please try again.");
             }
         }
-
     }
-
 }
-

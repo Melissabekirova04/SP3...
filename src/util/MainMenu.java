@@ -9,7 +9,7 @@ public class MainMenu {
     private final TextUI ui = new TextUI();
     private final FileIO io = new FileIO(); // bruges til at læse/skrives CSV
 
-    private final ArrayList<User> users = new ArrayList<>();
+    private final List<User> users = new ArrayList<>();
     private User user;
 
     // Film og serier fra CSV
@@ -34,15 +34,15 @@ public class MainMenu {
             }
 
             String[] parts = trimmed.split(";"); // Deler linjen op ved semikolon(Name og password bliver delt op)
-            String name = parts [0].trim();
+            String name = parts[0].trim();
 
             String password;
-            if(parts.length > 1){ // tjekker om der findes en anden del (password) efter semikolon
+            if (parts.length > 1) { // tjekker om der findes en anden del (password) efter semikolon
                 password = parts[1].trim(); // hvis ja, gem den som password
             } else {
                 password = ""; // ellers så sæt password til tom tekst
             }
-            if (!name.isEmpty()){
+            if (!name.isEmpty()) {
                 users.add(new User(name, password)); // tilføjer brugeren med navn og password til listen
             }
         }
@@ -66,7 +66,7 @@ public class MainMenu {
                 return;
             }
         }
-        String password = ui.promptText("Create passwords: ");
+        String password = ui.promptText("Create password: ");
 
         this.user = new User(name, password);
         this.users.add(this.user);
@@ -78,57 +78,63 @@ public class MainMenu {
         // indlæser eksisterende brugere fra CSV ved start
         loadUsersFromCsv();
 
-        ui.displayMsg("Welcome to MJO!");
-        ui.displayMsg("1) Create new user");
-        ui.displayMsg("2) Log in with existing user");
+        boolean inStartMenu = true;
 
-        String choice = ui.promptText("Choose an option: ");
+        while (inStartMenu) {
+            ui.displayMsg("Welcome to MJO!");
+            ui.displayMsg("1) Create new user");
+            ui.displayMsg("2) Log in with existing user");
 
-        switch (choice) {
-            case "1": {
-                String newName = ui.promptText("Create username: ");
-                createUser(newName);
-                // hvis oprettet ok, fortsæt
-                if (this.user != null && this.user.getName().equalsIgnoreCase(newName)) {
-                    ui.displayMsg("Username has been created: " + this.user.getName());
-                    runMJO();
+            String choice = ui.promptText("Choose an option: ");
+
+            switch (choice) {
+                case "1": {
+                    String newName = ui.promptText("Create username: ");
+                    createUser(newName);
+                    // hvis oprettet ok, fortsæt
+                    if (this.user != null && this.user.getName().equalsIgnoreCase(newName)) {
+                        ui.displayMsg("Username has been created: " + this.user.getName());
+                        runMJO();
+                        inStartMenu = false;
+                    }
+                    break;
                 }
-                break;
-            }
-            case "2": {
-                if (this.users.isEmpty()) {
-                    ui.displayMsg("No users exist, please create one.");
-                    return;
-                }
-                String existingName = ui.promptText("Enter your username: ");
-                String password = ui.promptText("Enter your password: ");
-
-                User found = null;
-                for (User u : this.users) {
-                    if (u.getName().equalsIgnoreCase(existingName) && u.getPassword().equals(password)) {
-                        found = u;
+                case "2": {
+                    if (this.users.isEmpty()) {
+                        ui.displayMsg("No users exist, please create one first.");
                         break;
                     }
+                    String existingName = ui.promptText("Enter your username: ");
+                    String password = ui.promptText("Enter your password: ");
+
+                    User found = null;
+                    for (User u : this.users) {
+                        if (u.getName().equalsIgnoreCase(existingName) && u.getPassword().equals(password)) {
+                            found = u;
+                            break;
+                        }
+                    }
+                    if (found == null) {
+                        ui.displayMsg("Wrong username or password. Please try again.");
+                        break;
+                    }
+                    this.user = found;
+                    ui.displayMsg("Welcome back, " + this.user.getName() + "!");
+                    runMJO();
+                    inStartMenu = false;
+                    break;
                 }
-                if (found == null) {
-                    ui.displayMsg("Wrong username or password. Please try again.");
-                    return;
-                }
-                this.user = found;
-                ui.displayMsg("Welcome back, " + this.user.getName() + "!");
-                runMJO();
-                break;
+                default:
+                    ui.displayMsg("Invalid choice. Please try again.");
             }
-            default:
-                ui.displayMsg("Invalid choice.");
         }
     }
 
     // Hovedmenu efter login
     public void runMJO() {
         ui.displayMsg("Welcome to MJO, " + this.user.getName() + "!");
-        ui.displayMsg("Loaded " + this.movies.size() + " movies. ");
-        ui.displayMsg("Loaded " + series.size() + " Series.");
+        ui.displayMsg("Loaded " + this.movies.size() + " movies.");
+        ui.displayMsg("Loaded " + series.size() + " series.");
         ui.displayMsg("Registered users: " + this.users.size() + "\n");
 
         boolean running = true;
@@ -144,11 +150,11 @@ public class MainMenu {
             String opt = ui.promptText("Choose an option: ");
             switch (opt) {
                 case "1":
-                    String type = ui.promptText("Do you want to search for:\n1) Movies\n2) Series");
+                    String type = ui.promptText("Do you want to search for:\n1) Movies\n2) Series\nChoose 1 or 2: ");
                     searchByTitle(type);
                     break;
                 case "2":
-                    searchByCategory();  // ← opdateret nedenfor med sortering
+                    searchByCategory();
                     break;
                 case "3":
                     showSavedForLater();
@@ -157,7 +163,7 @@ public class MainMenu {
                     showAlreadyWatched();
                     break;
                 case "5":
-                    filterMenu();        // ← sorterer ud fra valgte filtre
+                    filterMenu();
                     break;
                 case "0":
                     ui.displayMsg("Goodbye, " + this.user.getName() + "!");
@@ -166,6 +172,28 @@ public class MainMenu {
                 default:
                     ui.displayMsg("Invalid choice. Please try again.");
             }
+        }
+    }
+
+    // --------- HJÆLPEMETODER TIL PARSING ---------
+
+    private Double parseRating(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        try {
+            return Double.parseDouble(input.trim().replace(',', '.'));
+        } catch (NumberFormatException e) {
+            ui.displayMsg("Invalid rating format. Ignoring rating filter.");
+            return null;
+        }
+    }
+
+    private Integer parseYear(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        try {
+            return Integer.parseInt(input.trim());
+        } catch (NumberFormatException e) {
+            ui.displayMsg("Invalid year format. Ignoring year filter.");
+            return null;
         }
     }
 
@@ -193,17 +221,8 @@ public class MainMenu {
                     String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5) (leave empty for any): ").trim();
                     String yearStr = ui.promptText("Year (exact, e.g. 1994) (leave empty for any): ").trim();
 
-                    Double minRating = null;
-                    if (!minRatingStr.isEmpty()) {
-                        try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
-                        catch (NumberFormatException e) { ui.displayMsg("Invalid rating format. Ignoring."); }
-                    }
-
-                    Integer year = null;
-                    if (!yearStr.isEmpty()) {
-                        try { year = Integer.parseInt(yearStr); }
-                        catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Ignoring."); }
-                    }
+                    Double minRating = parseRating(minRatingStr);
+                    Integer year = parseYear(yearStr);
 
                     found = filterMoviesOnSource(found, category, minRating, year);
                     // sortér baseret på hvilke filtre der blev brugt
@@ -237,17 +256,8 @@ public class MainMenu {
                     String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5) (leave empty for any): ").trim();
                     String yearStr = ui.promptText("Year (exact, e.g. 2010) (leave empty for any): ").trim();
 
-                    Double minRating = null;
-                    if (!minRatingStr.isEmpty()) {
-                        try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
-                        catch (NumberFormatException e) { ui.displayMsg("Invalid rating format. Ignoring."); }
-                    }
-
-                    Integer year = null;
-                    if (!yearStr.isEmpty()) {
-                        try { year = Integer.parseInt(yearStr); }
-                        catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Ignoring."); }
-                    }
+                    Double minRating = parseRating(minRatingStr);
+                    Integer year = parseYear(yearStr);
 
                     foundSeries = filterSeriesOnSource(foundSeries, category, minRating, year);
                     // sortér baseret på hvilke filtre der blev brugt
@@ -263,7 +273,7 @@ public class MainMenu {
                 break;
             }
             default:
-                ui.displayMsg("Search option '" + searchOption + "' is invalid. Please choose 'movie' or 'series'.");
+                ui.displayMsg("Search option '" + searchOption + "' is invalid. Please choose '1' for movies or '2' for series.");
         }
     }
 
@@ -294,19 +304,11 @@ public class MainMenu {
                 String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5). Leave empty to skip: ").trim();
                 String yearStr = ui.promptText("Exact release year (e.g. 2001). Leave empty to skip: ").trim();
 
-                Double minRating = null;
-                if (!minRatingStr.isEmpty()) {
-                    try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
-                    catch (NumberFormatException e) { ui.displayMsg("Invalid rating format, ignoring filter."); }
-                }
+                Double minRating = parseRating(minRatingStr);
+                Integer year = parseYear(yearStr);
 
-                Integer year = null;
-                if (!yearStr.isEmpty()) {
-                    try { year = Integer.parseInt(yearStr); }
-                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format, ignoring filter."); }
-                }
-
-                found = filterMoviesOnSource(found, category, minRating, year);
+                // kategori er allerede filtreret i 'found', så vi sender null for kategori her
+                found = filterMoviesOnSource(found, null, minRating, year);
                 // sortér efter valgte filtre
                 sortMovies(found, minRating, year);
 
@@ -339,19 +341,11 @@ public class MainMenu {
                 String minRatingStr = ui.promptText("Minimum rating (e.g. 7.0). Leave empty to skip: ").trim();
                 String yearStr = ui.promptText("Exact start year (e.g. 2010). Leave empty to skip: ").trim();
 
-                Double minRating = null;
-                if (!minRatingStr.isEmpty()) {
-                    try { minRating = Double.parseDouble(minRatingStr.replace(',', '.')); }
-                    catch (NumberFormatException e) { ui.displayMsg("Invalid rating format, ignoring filter."); }
-                }
+                Double minRating = parseRating(minRatingStr);
+                Integer year = parseYear(yearStr);
 
-                Integer year = null;
-                if (!yearStr.isEmpty()) {
-                    try { year = Integer.parseInt(yearStr); }
-                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format, ignoring filter."); }
-                }
-
-                found = filterSeriesOnSource(found, category, minRating, year);
+                // kategori er allerede filtreret i 'found', så vi sender null for kategori her
+                found = filterSeriesOnSource(found, null, minRating, year);
                 // sortér efter valgte filtre
                 sortSeries(found, minRating, year);
 
@@ -372,7 +366,7 @@ public class MainMenu {
         ui.displayMsg("\n----- SEARCH RESULTS -----");
         for (int i = 0; i < list.size(); i++) {
             Movies m = list.get(i);
-            System.out.println((i + 1) + ") " + m.getTitle() + " (" + m.getReleaseDate() + ") "
+            ui.displayMsg((i + 1) + ") " + m.getTitle() + " (" + m.getReleaseDate() + ") "
                     + m.getCategory() + " ⭐" + m.getRating());
         }
         String choice = ui.promptText("Enter a number to play a movie (or 0 to go back): ");
@@ -391,7 +385,7 @@ public class MainMenu {
         ui.displayMsg("\n----- SEARCH RESULTS -----");
         for (int i = 0; i < seriesList.size(); i++) {
             Series serie = seriesList.get(i);
-            System.out.println((i + 1) + ") " + serie.getTitle() + " (" + serie.getReleaseDate() + ") "
+            ui.displayMsg((i + 1) + ") " + serie.getTitle() + " (" + serie.getReleaseDate() + ") "
                     + serie.getCategory() + " ⭐" + serie.getRating());
         }
 
@@ -407,14 +401,14 @@ public class MainMenu {
         }
     }
 
-    private void showSavedForLater () {
+    private void showSavedForLater() {
         if (user.getSavedForLater().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
             ui.displayMsg("-------------Saved for later-------------");
-            for (int i=0; i<user.getSavedForLater().size(); i++) {
+            for (int i = 0; i < user.getSavedForLater().size(); i++) {
                 Media m = user.getSavedForLater().get(i);
-                ui.displayMsg(i+1 + ") " + m.getTitle() + " (" + m.getReleaseDate() + "), " + m.getCategory() + ", " + m.getRating());
+                ui.displayMsg((i + 1) + ") " + m.getTitle() + " (" + m.getReleaseDate() + "), " + m.getCategory() + ", " + m.getRating());
             }
-            String choice = ui.promptText("Chose the number of a movie / show you want to select or press 0 to go back to the main menu");
+            String choice = ui.promptText("Choose the number of a movie/show you want to select or press 0 to go back to the main menu: ");
             try {
                 int number = Integer.parseInt(choice);
                 if (number == 0) return;
@@ -425,19 +419,19 @@ public class MainMenu {
             }
 
         } else {
-            ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
-            runMJO();
+            ui.promptText("Nothing added to watch later... Press any key to return to the main menu.");
+            return;
         }
     }
 
     private void showAlreadyWatched() {
         if (user.getWatchedMedia().size() >= 1) { //Hvis brugerens antal af set medie er større end 0 vis listen.
             ui.displayMsg("-------------Already watched-------------");
-            for (int i=0; i<user.getWatchedMedia().size(); i++) {
+            for (int i = 0; i < user.getWatchedMedia().size(); i++) {
                 Media m = user.getWatchedMedia().get(i);
-                ui.displayMsg(i+1 + ") " + m.getTitle() + " (" + m.getReleaseDate() + "), " + m.getCategory() + ", " + m.getRating());
+                ui.displayMsg((i + 1) + ") " + m.getTitle() + " (" + m.getReleaseDate() + "), " + m.getCategory() + ", " + m.getRating());
             }
-            String choice = ui.promptText("Chose the number of a movie / show you want to select or press 0 to go back to the main menu");
+            String choice = ui.promptText("Choose the number of a movie/show you want to select or press 0 to go back to the main menu: ");
             try {
                 int number = Integer.parseInt(choice);
                 if (number == 0) return;
@@ -448,8 +442,8 @@ public class MainMenu {
             }
 
         } else {
-            ui.promptText("Nothing added to watch later... Press any button to return to the main menu");
-            runMJO();
+            ui.promptText("Nothing watched yet... Press any key to return to the main menu.");
+            return;
         }
     }
 
@@ -475,15 +469,14 @@ public class MainMenu {
                     break;
                 }
                 case "rating": {
-                    // ingen ekstra input – vis bare bedst ratede først
+                    // vis bedst ratede først
                     result.sort((a, b) -> Double.compare(b.getRating(), a.getRating())); // høj → lav
                     break;
                 }
                 case "year": {
                     String yearStr = ui.promptText("Enter year (e.g. 1994): ").trim();
-                    Integer year = null;
-                    try { year = Integer.parseInt(yearStr); }
-                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Try again."); return; }
+                    Integer year = parseYear(yearStr);
+                    if (year == null) return;
 
                     // filter
                     Integer finalYear = year;
@@ -522,9 +515,8 @@ public class MainMenu {
                 }
                 case "year": {
                     String yearStr = ui.promptText("Enter start year (e.g. 2010): ").trim();
-                    Integer year = null;
-                    try { year = Integer.parseInt(yearStr); }
-                    catch (NumberFormatException e) { ui.displayMsg("Invalid year format. Try again."); return; }
+                    Integer year = parseYear(yearStr);
+                    if (year == null) return;
 
                     // filter (vi bruger startår = getReleaseDate())
                     Integer finalYear = year;
@@ -548,7 +540,6 @@ public class MainMenu {
             ui.displayMsg("Invalid type. Please choose 'movie' or 'series'.");
         }
     }
-
 
     // Filtrér film på en given liste (bruges af både menu 5 og søgning)
     private ArrayList<Movies> filterMoviesOnSource(List<Movies> source, String category, Double minRating, Integer year) {
@@ -578,7 +569,6 @@ public class MainMenu {
         return result;
     }
 
-
     // Film: rating valgt -> rating, ellers år valgt -> år  ellers alfabetisk
     private void sortMovies(List<Movies> list, Double minRating, Integer year) {
         if (minRating != null) {
@@ -600,8 +590,4 @@ public class MainMenu {
             list.sort(Comparator.comparing(Series::getTitle, String.CASE_INSENSITIVE_ORDER));
         }
     }
-
 }
-
-
-
