@@ -37,10 +37,10 @@ public class MainMenu {
             String name = parts[0].trim();
 
             String password;
-            if (parts.length > 1) { // tjekker om der findes en anden del (password) efter semikolon
-                password = parts[1].trim(); // hvis ja, gem den som password
+            if (parts.length > 1) {
+                password = parts[1].trim();
             } else {
-                password = ""; // ellers så sæt password til tom tekst
+                password = "";
             }
             if (!name.isEmpty()) {
                 users.add(new User(name, password)); // tilføjer brugeren med navn og password til listen
@@ -70,7 +70,7 @@ public class MainMenu {
 
         this.user = new User(name, password);
         this.users.add(this.user);
-        saveUsersToCsv(); // gem efter oprettelse
+        saveUsersToCsv(); // gemmer efter oprettelse
     }
 
     // Startmenu: vælg at oprette eller logge ind
@@ -218,8 +218,8 @@ public class MainMenu {
                 // Valgfri filtrering + sortering på de fundne film
                 if (ui.promptText("Apply filters to these results? (y/n): ").trim().equalsIgnoreCase("y")) {
                     String category = ui.promptText("Category contains (leave empty for any): ").trim();
-                    String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5) (leave empty for any): ").trim();
-                    String yearStr = ui.promptText("Year (exact, e.g. 1994) (leave empty for any): ").trim();
+                    String minRatingStr = ui.promptText("Minimum rating (7.5) (leave empty for any): ").trim();
+                    String yearStr = ui.promptText("Year  1994) (leave empty for any): ").trim();
 
                     Double minRating = parseRating(minRatingStr);
                     Integer year = parseYear(yearStr);
@@ -253,8 +253,8 @@ public class MainMenu {
                 // Valgfri filtrering + sortering på de fundne serier
                 if (ui.promptText("Apply filters to these results? (y/n): ").trim().equalsIgnoreCase("y")) {
                     String category = ui.promptText("Category contains (leave empty for any): ").trim();
-                    String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5) (leave empty for any): ").trim();
-                    String yearStr = ui.promptText("Year (exact, e.g. 2010) (leave empty for any): ").trim();
+                    String minRatingStr = ui.promptText("Minimum rating (7.5) (leave empty for any): ").trim();
+                    String yearStr = ui.promptText("Year (2010) (leave empty for any): ").trim();
 
                     Double minRating = parseRating(minRatingStr);
                     Integer year = parseYear(yearStr);
@@ -301,8 +301,8 @@ public class MainMenu {
             ).trim();
 
             if (filterChoice.equalsIgnoreCase("y")) {
-                String minRatingStr = ui.promptText("Minimum rating (e.g. 7.5). Leave empty to skip: ").trim();
-                String yearStr = ui.promptText("Exact release year (e.g. 2001). Leave empty to skip: ").trim();
+                String minRatingStr = ui.promptText("Minimum rating (7.5). Leave empty to skip: ").trim();
+                String yearStr = ui.promptText("Exact release year (2001). Leave empty to skip: ").trim();
 
                 Double minRating = parseRating(minRatingStr);
                 Integer year = parseYear(yearStr);
@@ -333,13 +333,13 @@ public class MainMenu {
             }
 
             String filterChoice = ui.promptText(
-                    "Apply additional filters to these series? (y/n)\n" +
+                    "Apply additional filters to these series? (yes/no)\n" +
                             "→ Example: rating 8.5, year 2015 (press Enter to skip)"
             ).trim();
 
             if (filterChoice.equalsIgnoreCase("y")) {
-                String minRatingStr = ui.promptText("Minimum rating (e.g. 7.0). Leave empty to skip: ").trim();
-                String yearStr = ui.promptText("Exact start year (e.g. 2010). Leave empty to skip: ").trim();
+                String minRatingStr = ui.promptText("Minimum rating (7.0). Leave empty to skip: ").trim();
+                String yearStr = ui.promptText("Exact start year (2010). Leave empty to skip: ").trim();
 
                 Double minRating = parseRating(minRatingStr);
                 Integer year = parseYear(yearStr);
