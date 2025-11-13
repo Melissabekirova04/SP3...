@@ -78,55 +78,51 @@ public class MainMenu {
         // indlæser eksisterende brugere fra CSV ved start
         loadUsersFromCsv();
 
-        boolean inStartMenu = true;
+        ui.displayMsg("Welcome to MJO!");
+        ui.displayMsg("1) Create new user");
+        ui.displayMsg("2) Log in with existing user");
 
-        while (inStartMenu) {
-            ui.displayMsg("Welcome to MJO!");
-            ui.displayMsg("1) Create new user");
-            ui.displayMsg("2) Log in with existing user");
+        String choice = ui.promptText("Choose an option: ");
 
-            String choice = ui.promptText("Choose an option: ");
-
-            switch (choice) {
-                case "1": {
-                    String newName = ui.promptText("Create username: ");
-                    createUser(newName);
-                    // hvis oprettet ok, fortsæt
-                    if (this.user != null && this.user.getName().equalsIgnoreCase(newName)) {
-                        ui.displayMsg("Username has been created: " + this.user.getName());
-                        runMJO();
-                        inStartMenu = false;
-                    }
-                    break;
+        switch (choice) {
+            case "1": {
+                String newName = ui.promptText("Create username: ");
+                createUser(newName);
+                // hvis oprettet ok, fortsæt
+                if (this.user != null && this.user.getName().equalsIgnoreCase(newName)) {
+                    ui.displayMsg("Username has been created: " + this.user.getName());
+                    runMJO();
                 }
-                case "2": {
-                    if (this.users.isEmpty()) {
-                        ui.displayMsg("No users exist, please create one first.");
-                        break;
-                    }
+                break;
+            }
+            case "2": {
+                if (this.users.isEmpty()) {
+                    ui.displayMsg("No users exist, please create one.");
+                    return;
+                }
+                User found = null;
+                while (found == null) { // while loop der sørger for at programmet ikke lukker ned hvis man taster forkert
                     String existingName = ui.promptText("Enter your username: ");
                     String password = ui.promptText("Enter your password: ");
 
-                    User found = null;
-                    for (User u : this.users) {
+                    for (User u : this.users) { // et for each loop som tjekker en user af gangen
+                        // if statement der sammenligner brugerens navn og password i listen, ift. hvad brugeren skriver
                         if (u.getName().equalsIgnoreCase(existingName) && u.getPassword().equals(password)) {
-                            found = u;
+                            found = u; // hvis dette er sandt, har vi fundet brugeren
                             break;
                         }
                     }
                     if (found == null) {
                         ui.displayMsg("Wrong username or password. Please try again.");
-                        break;
                     }
-                    this.user = found;
-                    ui.displayMsg("Welcome back, " + this.user.getName() + "!");
-                    runMJO();
-                    inStartMenu = false;
-                    break;
                 }
-                default:
-                    ui.displayMsg("Invalid choice. Please try again.");
+                this.user = found;
+                ui.displayMsg("Welcome back, " + this.user.getName() + "!");
+                runMJO();
+                break;
             }
+            default:
+                ui.displayMsg("Invalid choice.");
         }
     }
 
